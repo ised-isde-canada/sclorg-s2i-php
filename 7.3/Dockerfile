@@ -8,10 +8,24 @@ RUN yum update -y && \
     yum clean all && \
     yum install -y php-xmlrpc && \
     yum install -y php-zip && \
-    yum install -y langpacks-fr  && \
+    yum install -y langpacks-fr && \
     yum reinstall -y glibc-common && \
-    dnf install postgresql12 && \
+    yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    yum --disablerepo=rhel-8-for-x86_64-appstream-rpms install -y postgresql12 && \
     yum clean all
+
+RUN yum install -y python27 && \
+    pip2 install python-dateutil && \
+    cd /usr/local && \
+    git clone https://github.com/s3tools/s3cmd.git && \
+    ln -s /usr/local/s3cmd/s3cmd /usr/bin/s3cmd && \
+    ln -s /usr/bin/python2 /usr/bin/python && \
+    mkdir /opt/backup && \
+    chmod -R 775 /opt/backup
+
+COPY backup-restore/backup.php /opt/backup/backup.php
+COPY backup-restore/.env /opt/backup/.env
+RUN chown -R 1001 /opt/backup
 
 # Might want to refine this (something more specific than $APP_DATA)
 RUN chgrp -Rf root $APP_DATA && \
