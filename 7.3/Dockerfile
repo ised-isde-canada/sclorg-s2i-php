@@ -24,6 +24,7 @@ RUN yum install -y python27 && \
     chmod -R 775 /opt/backup
 
 COPY backup-restore/backup.php /opt/backup/backup.php
+COPY backup-restore/restore.php /opt/backup/restore.php
 COPY backup-restore/.env /opt/backup/.env
 RUN chown -R 1001 /opt/backup
 
