@@ -138,7 +138,7 @@ $db_dump = shell_exec('find -name "*.db.tar"');
 
 // restore database dump
 
-$cmd = "pg_restore -h $db_host -U $db_user -d $db_name -F t -c $db_dump";
+$cmd = "pg_restore --no-privileges --no-owner -h $db_host -U $db_user -d $db_name -F t -c $db_dump";
 
 echo "$cmd\n";
 
@@ -152,7 +152,7 @@ echo "$cmd\n";
 
 // move sites directory into place
 
-`chmod -R ug+w /drupal/sites`;
+`chmod -R ug+w $SITES/`;
 
 $cmd = "cp -rp /opt/backup/sites/* $SITES/";
 
