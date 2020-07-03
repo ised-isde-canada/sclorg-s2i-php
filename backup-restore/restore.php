@@ -2,15 +2,16 @@
 
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 
-// $HOME = getenv('HOME');
-$SITES = '$HOME/html/sites';
+$HOME = getenv('HOME');
+$SITES = "$HOME/html/sites";
 
 // enter maintenance mode
 echo "Entering maintenance mode...\n";
 exec('$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer');
 exec('$HOME/vendor/bin/drush cr');
 
-$s3ini = parse_ini_file(".s3cfg", false, INI_SCANNER_RAW);
+// check for s3 credentials configuration file
+$s3ini = parse_ini_file("$HOME/.s3cfg", false, INI_SCANNER_RAW);
 $bucket = $s3ini['host_bucket'];
 if (empty($bucket)) {
     echo "No S3 bucket defined!\n";
