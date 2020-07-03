@@ -7,8 +7,8 @@ $SITES = "$HOME/html/sites";
 
 // enter maintenance mode
 echo "Entering maintenance mode...\n";
-exec('$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer');
-exec('$HOME/vendor/bin/drush cr');
+exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer");
+exec("$HOME/vendor/bin/drush cr");
 
 // check for s3 credentials configuration file
 $s3ini = parse_ini_file("$HOME/.s3cfg", false, INI_SCANNER_RAW);
@@ -63,9 +63,12 @@ echo "$cmd\n";
 
 // unzip backup file to /tmp
 $backup_file = shell_exec('find -name "*.tar.gz"');
-$cmd = "gunzip -f $backup_file";
+$backup_file = preg_replace('/\.\//', '', $backup_file);
+$cmd = "gunzip -f $backup_file > /tmp/$backup_file";
 echo "$cmd\n";
 `$cmd`;
+
+exec('cd /tmp');
 $backup_file = preg_replace('/\.gz$/', '', $backup_file);
 $cmd = "tar xf $backup_file";
 echo "$cmd\n";
@@ -79,14 +82,17 @@ $cmd = "pg_restore --no-privileges --no-owner -h $db_host -U $db_user -d $db_nam
 echo "$cmd\n";
 `$cmd`;
 
-// remove compressed backup file
-`rm $backup_file`;
-
 // move sites directory into place
 `chmod -R ug+w $SITES/`;
-$cmd = "cp -rp /opt/backup/sites/* $SITES/";
+$cmd = "cp -rp sites/* $SITES/";
 echo "$cmd\n";
 `$cmd`;
+
+// cleanup
+`rm $backup_file`;
+`rm -rf sites`;
+chdir('/opt/backup');
+`rm -f *.tar.gz`;
 
 // replace settings.php database credentials prompt
 do {
@@ -126,7 +132,8 @@ echo "Restore complete.\n";
 // remove the .pgpass file
 unlink("$HOME/.pgpass");
 
+
 // exit maintenance mode
 echo "Exiting maintenance mode...\n";
-exec('$HOME/vendor/bin/drush state:set system.maintenance_mode 0 --input-format=integer');
-exec('$HOME/vendor/bin/drush cr');
+exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 0 --input-format=integer");
+exec("$HOME/vendor/bin/drush cr");
