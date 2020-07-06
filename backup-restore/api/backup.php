@@ -6,20 +6,29 @@ $HOME = getenv('HOME');
 $SITES = "$HOME/html/sites";
 
 $pgpassfile = "$HOME/.pgpass";
+$s3config = "$HOME/.s3cfg";
+
 putenv("PGPASSFILE=$pgpassfile");
+
+$access_key = $_POST['access_key'];
+$secret_key = $_POST['secret_key'];
+$bucket_location = $_POST['bucket_location'];
+$host_base = $_POST['host_base'];
+$host_bucket = $_POST['host_bucket'];
+
+$s3data = file_get_contents('/opt/backup/s3cfg.template');
+$s3data = str_replace('__ACCESS_KEY__', $access_key, $s3data);
+$s3data = str_replace('__SECRET_KEY__', $secret_key, $s3data);
+$s3data = str_replace('__BUCKET_LOCATION__', $bucket_location, $s3data);
+$s3data = str_replace('__HOST_BASE__', $host_base, $s3data);
+$s3data = str_replace('__HOST_BUCKET__', $host_bucket, $s3data);
+file_put_contents($s3config, $s3data);
+chmod($s3config, 0600);
 
 // enter maintenance mode
 echo "Entering maintenance mode...\n";
 exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer");
 exec("$HOME/vendor/bin/drush cr");
-
-// check for s3 credentials configuration file
-$s3ini = parse_ini_file("$HOME/.s3cfg", false, INI_SCANNER_RAW);
-$bucket = $s3ini['host_bucket'];
-if (empty($bucket)) {
-    echo "No S3 bucket defined!\n";
-    exit;
-}
 
 require "$SITES/default/settings.php";
 
