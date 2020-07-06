@@ -69,7 +69,7 @@ $cmd = "gzip -f /tmp/$tarfile";
 echo "$cmd\n";
 `$cmd`;
 
-$cmd = "s3cmd -q --mime-type=application/x-gzip put /tmp/$tarfile.gz s3://$bucket/$tarfile.gz";
+$cmd = "s3cmd -q --mime-type=application/x-gzip put /tmp/$tarfile.gz s3://$host_bucket/$tarfile.gz";
 echo "$cmd\n";
 `$cmd`;
 
