@@ -23,7 +23,7 @@ RUN yum install -y python27 && \
     mkdir /opt/backup && \
     chmod -R 775 /opt/backup
 
-COPY backup-restore/backup.php backup-restore/restore.php backup-restore/api /opt/backup/
+COPY backup-restore/* /opt/backup/
 RUN chown -R 1001 /opt/backup
 
 # Might want to refine this (something more specific than $APP_DATA)
