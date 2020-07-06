@@ -64,7 +64,6 @@ echo "$cmd\n";
 
 // unzip backup file
 $backup_file = shell_exec('find -name "*.tar.gz"');
-//$backup_file = preg_replace('/\.\//', '', $backup_file);
 $cmd = "gunzip -f $backup_file";
 echo "$cmd\n";
 `$cmd`;
@@ -117,11 +116,12 @@ if ($input == 'y' || $input == 'Y') {
     */
 
     // append database credentials to settings.php (TODO - replace)
+    chmod("$SITES/default/settings.php", 0775);
     if ($fp = fopen("$SITES/default/settings.php", "a+")) {
         fwrite($fp, '$databases[\'default\'][\'default\'] = ' . var_export($db, true) . ';');
         fclose($fp);
-        chmod("$SITES/default/settings.php", 0644);
     }
+    chmod("$SITES/default/settings.php", 0644);
     echo("Credentials set.\n");
 }
 
