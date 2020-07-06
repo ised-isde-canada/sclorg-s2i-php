@@ -39,9 +39,10 @@ if ($fp = fopen("$HOME/.pgpass", "w")) {
   chmod("$HOME/.pgpass", 0600);
 }
 
+chdir('/tmp');
+
 // store 5 most recent backups from s3 bucket in array
-$s3_url = "s3://ised-s3-676567182757-drupal-custom-backup";
-$backup_files = explode("\n", rtrim(`s3cmd ls $s3_url | tail -5`));
+$backup_files = explode("\n", rtrim(`s3cmd ls s3://$bucket | tail -5`));
 
 // print backup file names
 foreach ($backup_files as $n => $file) {
@@ -61,14 +62,12 @@ $cmd = "s3cmd get $backup_url[0]";
 echo "$cmd\n";
 `$cmd`;
 
-// unzip backup file to /tmp
+// unzip backup file
 $backup_file = shell_exec('find -name "*.tar.gz"');
-$backup_file = preg_replace('/\.\//', '', $backup_file);
-$cmd = "gunzip -f $backup_file > /tmp/$backup_file";
+//$backup_file = preg_replace('/\.\//', '', $backup_file);
+$cmd = "gunzip -f $backup_file";
 echo "$cmd\n";
 `$cmd`;
-
-exec('cd /tmp');
 $backup_file = preg_replace('/\.gz$/', '', $backup_file);
 $cmd = "tar xf $backup_file";
 echo "$cmd\n";
@@ -91,8 +90,7 @@ echo "$cmd\n";
 // cleanup
 `rm $backup_file`;
 `rm -rf sites`;
-chdir('/opt/backup');
-`rm -f *.tar.gz`;
+`rm *.db.tar`;
 
 // replace settings.php database credentials prompt
 do {
