@@ -26,7 +26,7 @@ RUN yum install -y python27 && \
 COPY backup-restore/backup-api.php /opt/app-root/src/html/backup.php
 COPY backup-restore/restore-api.php /opt/app-root/src/html/restore.php
 COPY backup-restore/* /opt/backup/
-RUN chown -R 1001 /opt/backup
+RUN chown -R 1001 /opt/backup /opt/app-root/src/html/backup.php /opt/app-root/src/html/restore.php
 
 # Might want to refine this (something more specific than $APP_DATA)
 RUN chgrp -Rf root $APP_DATA && \
