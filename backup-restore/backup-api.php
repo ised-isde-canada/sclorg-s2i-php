@@ -26,7 +26,7 @@ file_put_contents($s3cfgfile, $s3data);
 chmod($s3cfgfile, 0600);
 
 // enter maintenance mode
-$json['messages'][] = "Entering maintenance mode...\n";
+$json['messages'][] = "Entering maintenance mode...";
 exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer");
 exec("$HOME/vendor/bin/drush cr");
 
@@ -71,8 +71,7 @@ $json['messages'][] = $cmd;
 
 $cmd = "s3cmd -q --mime-type=application/x-gzip put /tmp/$tarfile.gz s3://$host_bucket/$tarfile.gz";
 $json['messages'][] = $cmd;
-$result = `$cmd`;
-$json['messages'][] = "Result from s3cmd is: $result";
+`$cmd`;
 
 $cmd = "rm -f /tmp/$dbbackup";
 $json['messages'][] = $cmd;
@@ -86,7 +85,7 @@ unlink($pgpassfile);
 unlink($s3cfgfile);
 
 // exit maintenance mode
-$json['messages'][] = "Exiting maintenance mode...\n";
+$json['messages'][] = "Exiting maintenance mode...";
 exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 0 --input-format=integer");
 exec("$HOME/vendor/bin/drush cr");
 
