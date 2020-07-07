@@ -5,72 +5,65 @@ ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 $HOME = getenv('HOME');
 $SITES = "$HOME/html/sites";
 
+$pgpassfile = "$HOME/.pgpass";
+$s3cfgfile = "$HOME/.s3cfg";
+
+putenv("PGPASSFILE=$pgpassfile");
+
+$access_key = $_POST['access_key'];
+$secret_key = $_POST['secret_key'];
+$bucket_location = $_POST['bucket_location'];
+$host_base = $_POST['host_base'];
+$host_bucket = $_POST['host_bucket'];
+
+$s3data = file_get_contents('/opt/backup/s3cfg.template');
+$s3data = str_replace('__ACCESS_KEY__', $access_key, $s3data);
+$s3data = str_replace('__SECRET_KEY__', $secret_key, $s3data);
+$s3data = str_replace('__BUCKET_LOCATION__', $bucket_location, $s3data);
+$s3data = str_replace('__HOST_BASE__', $host_base, $s3data);
+$s3data = str_replace('__HOST_BUCKET__', $host_bucket, $s3data);
+file_put_contents($s3cfgfile, $s3data);
+chmod($s3cfgfile, 0600);
+
 // enter maintenance mode
-echo "Entering maintenance mode...\n";
+$json['messages'][] = "Entering maintenance mode...\n";
 exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 1 --input-format=integer");
 exec("$HOME/vendor/bin/drush cr");
 
-// check for s3 credentials configuration file
-$s3ini = parse_ini_file("$HOME/.s3cfg", false, INI_SCANNER_RAW);
-$bucket = $s3ini['host_bucket'];
-if (empty($bucket)) {
-    echo "No S3 bucket defined!\n";
-    exit;
-}
+require "$SITES/default/settings.php";
 
-// store database credentials from settings.php
-if (file_exists("$SITES/default/settings.php")) {
-    require "$SITES/default/settings.php";
-    $db_name = $databases['default']['default']['database'];
-    $db_user = $databases['default']['default']['username'];
-    $db_pass = $databases['default']['default']['password'];
-    $db_host = $databases['default']['default']['host'];
-    $db_port = $databases['default']['default']['port'];
-} else {
-    echo "No settings.php file found.\n";
-    exit;
-}
+$db_name = $databases['default']['default']['database'];
+$db_user = $databases['default']['default']['username'];
+$db_pass = $databases['default']['default']['password'];
+$db_host = $databases['default']['default']['host'];
+$db_port = $databases['default']['default']['port'];
+
 
 // create .pgpass file
 $pgpass = "$db_host:$db_port:$db_name:$db_user:$db_pass";
-if ($fp = fopen("$HOME/.pgpass", "w")) {
+if ($fp = fopen($pgpassfile, "w")) {
   fwrite($fp, "$pgpass\n");
   fclose($fp);
-  chmod("$HOME/.pgpass", 0600);
+  chmod($pgpassfile, 0600);
 }
 
 chdir('/tmp');
 
-// store 5 most recent backups from s3 bucket in array
-$backup_files = explode("\n", rtrim(`s3cmd ls s3://$bucket | tail -5`));
-
-// print backup file names
-foreach ($backup_files as $n => $file) {
-    echo ($n+1) . '. ' . "$file\n";
-}
-
-// prompt user for backup file number
-do {
-    echo "Backup to restore (enter number): ";
-    $input = fgets(STDIN);
-} while ($input < 1 || $input > 5);
-
-// get backup file from s3 bucket
-$index = $input - 1;
-preg_match('(s3:[a-z0-9\-./]+)', "$backup_files[$index]", $backup_url);
-$cmd = "s3cmd get $backup_url[0]";
-echo "$cmd\n";
+// get most recent backup file from s3 bucket
+$cmd = "s3cmd get $(s3cmd ls s3://$host_bucket | tail -1 | awk '{ print $4 }')";
+$json['messages'][] = $cmd;
 `$cmd`;
+
 
 // unzip backup file
 $backup_file = shell_exec('find -name "*.tar.gz"');
-//$backup_file = preg_replace('/\.\//', '', $backup_file);
 $cmd = "gunzip -f $backup_file";
-echo "$cmd\n";
+$json['messages'][] = $cmd;
 `$cmd`;
+
 $backup_file = preg_replace('/\.gz$/', '', $backup_file);
 $cmd = "tar xf $backup_file";
-echo "$cmd\n";
+$json['messages'][] = $cmd;
 `$cmd`;
 
 // locate database dump
@@ -78,60 +71,55 @@ $db_dump = shell_exec('find -name "*.db.tar"');
 
 // restore database dump
 $cmd = "pg_restore --no-privileges --no-owner -h $db_host -U $db_user -d $db_name -F t -c $db_dump";
-echo "$cmd\n";
+$json['messages'][] = $cmd;
 `$cmd`;
 
 // move sites directory into place
 `chmod -R ug+w $SITES/`;
 $cmd = "cp -rp sites/* $SITES/";
-echo "$cmd\n";
+$json['messages'][] = $cmd;
 `$cmd`;
 
 // cleanup
-`rm $backup_file`;
-`rm -rf sites`;
-`rm *.db.tar`;
+$cmd = "rm $backup_file";
+$json['messages'][] = $cmd;
+`$cmd`;
 
-// replace settings.php database credentials prompt
-do {
-    echo "Replace settings.php database credentials with those that existed before restore (y/n)? ";
-    $input = trim(fgets(STDIN));
-} while ($input != 'y' && $input != 'Y' && $input != 'n' && $input != 'N' );
-if ($input == 'y' || $input == 'Y') {
-    $db = array (
-        'database' => $db_name,
-        'username' => $db_user,
-        'password' => $db_pass,
-        'prefix' => '',
-        'host' => $db_host,
-        'port' => $db_port,
-        'namespace' => 'Drupal\\Core\\Database\\Driver\\pgsql',
-        'driver' => 'pgsql'
-    );
+$cmd = "rm -rf sites";
+$json['messages'][] = $cmd;
+`$cmd`;
 
-    /*
-    // replace settings.php with default.settings.php
-    $cmd = "cp -p $SITES/default/default.settings.php $SITES/default/settings.php";
-    echo "$cmd\n";
-    `$cmd`;
-    */
+$cmd = "rm *.db.tar";
+$json['messages'][] = $cmd;
+`$cmd`;
 
-    // append database credentials to settings.php (TODO - replace)
-    if ($fp = fopen("$SITES/default/settings.php", "a+")) {
-        fwrite($fp, '$databases[\'default\'][\'default\'] = ' . var_export($db, true) . ';');
-        fclose($fp);
-        chmod("$SITES/default/settings.php", 0644);
-    }
-    echo("Credentials set.\n");
+// replace settings.php database credentials with those
+// that existed before restore 
+$db = array (
+    'database' => $db_name,
+    'username' => $db_user,
+    'password' => $db_pass,
+    'prefix' => '',
+    'host' => $db_host,
+    'port' => $db_port,
+    'namespace' => 'Drupal\\Core\\Database\\Driver\\pgsql',
+    'driver' => 'pgsql'
+);
+
+chmod("$SITES/default/settings.php", 0775);
+if ($fp = fopen("$SITES/default/settings.php", "a+")) {
+    fwrite($fp, '$databases[\'default\'][\'default\'] = ' . var_export($db, true) . ';');
+    fclose($fp);
 }
+chmod("$SITES/default/settings.php", 0644);
 
-echo "Restore complete.\n";
-
-// remove the .pgpass file
-unlink("$HOME/.pgpass");
-
+unlink($pgpassfile);
+unlink($s3cfgfile);
 
 // exit maintenance mode
-echo "Exiting maintenance mode...\n";
+$json['messages'][] = "Exiting maintenance mode...\n";
 exec("$HOME/vendor/bin/drush state:set system.maintenance_mode 0 --input-format=integer");
 exec("$HOME/vendor/bin/drush cr");
+
+header('Content-type: application/json; charset=utf-8');
+echo json_encode($json);
