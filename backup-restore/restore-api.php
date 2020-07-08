@@ -19,6 +19,7 @@ $secret_key = $_POST['secret_key'];
 $bucket_location = $_POST['bucket_location'];
 $host_base = $_POST['host_base'];
 $host_bucket = $_POST['host_bucket'];
+$backup_file = $_POST['backup_file'];
 
 $s3data = file_get_contents('/opt/backup/s3cfg.template');
 $s3data = str_replace('__ACCESS_KEY__', $access_key, $s3data);
@@ -54,13 +55,13 @@ if ($fp = fopen($pgpassfile, "w")) {
 chdir('/tmp');
 
 // get most recent backup file from s3 bucket
-$cmd = "s3cmd get $(s3cmd ls s3://$host_bucket | tail -1 | awk '{ print $4 }')";
+$cmd = "s3cmd get s3://$host_bucket/$backup_file";
 $json['messages'][] = $cmd;
 `$cmd`;
 
 
 // unzip backup file
-$backup_file = shell_exec('find -name "*.tar.gz"');
+//$backup_file = shell_exec('find -name "*.tar.gz"');
 $cmd = "gunzip -f $backup_file";
 $json['messages'][] = $cmd;
 `$cmd`;
