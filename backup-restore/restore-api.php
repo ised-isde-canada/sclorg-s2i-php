@@ -1,5 +1,9 @@
 <?php
 
+if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+  exit;
+}
+
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 
 $HOME = getenv('HOME');
@@ -94,7 +98,7 @@ $json['messages'][] = $cmd;
 `$cmd`;
 
 // replace settings.php database credentials with those
-// that existed before restore 
+// that existed before restore
 $db = array (
     'database' => $db_name,
     'username' => $db_user,
