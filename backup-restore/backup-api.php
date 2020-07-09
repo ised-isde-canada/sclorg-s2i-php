@@ -19,6 +19,7 @@ $secret_key = $_POST['secret_key'];
 $bucket_location = $_POST['bucket_location'];
 $host_base = $_POST['host_base'];
 $host_bucket = $_POST['host_bucket'];
+$app_name = $_POST['app_name'];
 
 $s3data = file_get_contents('/opt/backup/s3cfg.template');
 $s3data = str_replace('__ACCESS_KEY__', $access_key, $s3data);
@@ -52,7 +53,7 @@ if ($fp = fopen($pgpassfile, "w")) {
 
 $dtm = date('Y-m-d-H-i');
 $dbbackup = "$db_name.$dtm.db.tar";
-$tarfile = "drupal-$dtm.tar";
+$tarfile = "$app_name-$dtm.tar";
 
 // Dump using tar format (-F t)
 $cmd = "pg_dump -U $db_user -h $db_host -p $db_port -x -F t $db_name > /tmp/$dbbackup";
