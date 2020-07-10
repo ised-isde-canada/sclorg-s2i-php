@@ -53,7 +53,7 @@ if ($fp = fopen($pgpassfile, "w")) {
 
 $dtm = date('Y-m-d-H-i');
 $dbbackup = "$db_name.$dtm.db.tar";
-$tarfile = "$app_name-$dtm.tar";
+$tarfile = "$app_name/$dtm.tar";
 
 // Dump using tar format (-F t)
 $cmd = "pg_dump -U $db_user -h $db_host -p $db_port -x -F t $db_name > /tmp/$dbbackup";
