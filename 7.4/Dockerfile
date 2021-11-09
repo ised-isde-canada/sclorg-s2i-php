@@ -8,7 +8,7 @@ RUN yum update -y && \
     yum clean all && \
     yum install -y php-xmlrpc && \
     yum install -y php-zip && \
-    yum install -y langpacks-fr  && \
+    yum install -y glibc-all-langpacks && \
     yum reinstall -y glibc-common && \
     yum clean all
 
