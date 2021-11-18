@@ -18,4 +18,8 @@ RUN chgrp -Rf root $APP_DATA && \
     cd $APP_DATA && \
     umask 002
 
+# CIODRCOE-308 if the build is not a s2i build, these values are not being properly set and the container fails to start
+ENV HTTPD_MAX_REQUESTS_PER_CHILD=${HTTPD_MAX_REQUESTS_PER_CHILD:-4000}
+ENV HTTPD_MAX_KEEPALIVE_REQUESTS=${HTTPD_MAX_KEEPALIVE_REQUESTS:-100}
+
 USER 1001
