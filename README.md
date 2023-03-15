@@ -5,13 +5,17 @@ PHP 7.3 with PHP xmlrpc extension.
 
 See https://github.com/sclorg/s2i-php-container/tree/master/7.3
 
-Now including 7.4
+including 7.4
 
 See https://github.com/sclorg/s2i-php-container/tree/master/7.4
 
-and also including 8.0
+also including 8.0
 
 See https://github.com/sclorg/s2i-php-container/tree/master/8.0  (xmlrpc already included in 8.0)
+
+Now including 8.1
+
+See https://github.com/sclorg/s2i-php-container/tree/master/8.1  (xmlrpc already included in 8.1)
 
 ## Structure
 Subfolders match versions of php.
