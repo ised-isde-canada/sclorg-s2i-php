@@ -13,6 +13,9 @@ RUN yum update -y && \
     yum update php -y && \
     yum clean all
 
+# Ensure environment variables are available when using php-fpm.
+RUN echo "clear_env = no" >> /etc/php-fpm.d/www.conf
+
 # Might want to refine this (something more specific than $APP_DATA)
 RUN chgrp -Rf root $APP_DATA && \
     chmod -Rf g+w $APP_DATA && \
