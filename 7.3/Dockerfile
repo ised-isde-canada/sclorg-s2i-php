@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/php-73
+FROM registry.access.redhat.com/ubi7/php-73
 
 USER root
 
