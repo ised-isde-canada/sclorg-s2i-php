@@ -6,7 +6,7 @@ USER root
 # Install php-xmlrpc module from RHSCL repo, remove override_install_langs so all locales can be installed, install glibc-common for all locales (locale -a)
 RUN yum install -y php-xmlrpc && \
     yum install -y php-zip && \
-    yum install -y langpacks-fr  && \
+    yum install -y glibc-langpack-fr  && \
     yum reinstall -y glibc-common && \
     yum clean all
 
