@@ -8,7 +8,6 @@ RUN yum remove -y rpm-plugin-systemd-inhibit && \
     yum update -y && \
     yum install -y php-xmlrpc && \
     yum install -y php-zip && \
-    yum install -y langpack-fr  && \
     yum reinstall -y glibc-common && \
     yum clean all
 
