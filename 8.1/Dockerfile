@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi9/php-81
+FROM registry.access.redhat.com/ubi9/php-81
 
 USER root
 
@@ -10,6 +10,9 @@ RUN yum update -y && \
     yum install -y glibc-all-langpacks && \
     yum reinstall -y glibc-common && \
     yum clean all
+
+# Ensure environment variables are available when using php-fpm.
+RUN echo "clear_env = no" >> /etc/php-fpm.d/www.conf
 
 # Might want to refine this (something more specific than $APP_DATA)
 RUN chgrp -R 0 /var/run/httpd && \
