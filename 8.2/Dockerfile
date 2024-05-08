@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/php-82
+FROM registry.access.redhat.com/rhel9/php-82:1-11
 
 USER root
 
